@@ -3,6 +3,9 @@
     <div v-if="!isMobile" class="app flex flex-column">
       <Navigation />
       <div class="app__content flex flex-column">
+        <transition name="invoice-modal">
+          <InvoiceModal v-if="showInvoiceModal" />
+        </transition>
         <router-view />
       </div>
     </div>
@@ -15,13 +18,16 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import Navigation from "./components/Navigation";
+import InvoiceModal from "./components/InvoiceModal";
 
 export default {
   name: "App",
 
   components: {
-    Navigation
+    Navigation,
+    InvoiceModal
   },
 
   data () {
@@ -30,9 +36,13 @@ export default {
     }
   },
 
+  computed: {
+    ...mapState(['showInvoiceModal'])
+  },
+
   created () {
     this.checkScreen();
-    window.addEventListener("resize", this.checkScreen);
+    window.addEventListener('resize', this.checkScreen);
   },
 
   methods: {
@@ -68,6 +78,17 @@ $white: #FFFFFF;
   font-family: "Poppins", sans-serif;
 }
 
+/* scrollbars */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+::-webkit-scrollbar-thumb:vertical,
+::-webkit-scrollbar-thumb:horizontal {
+  background-color: $purple;
+  border-radius: 4px;
+}
+
 .app {
   background: $dark-blue;
   min-height: 100vh;
@@ -95,6 +116,17 @@ $white: #FFFFFF;
   p {
     margin-top: 16px;
   }
+}
+
+// Animated Invoice Modal
+.invoice-modal-enter-active,
+.invoice-modal-leave-active {
+  transition: 0.8s ease all;
+}
+
+.invoice-modal-enter-from,
+.invoice-modal-leave-to {
+  transform: translateX(-700px);
 }
 
 button,
