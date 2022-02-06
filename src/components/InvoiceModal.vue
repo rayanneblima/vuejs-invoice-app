@@ -148,6 +148,8 @@
 
 <script>
 import { mapMutations } from "vuex";
+import { db } from "../firebase/firebase";
+import { collection, addDoc } from 'firebase/firestore';
 
 export default {
   name: "InvoiceModal",
@@ -156,25 +158,25 @@ export default {
     return {
       dateOptions: { year: "numeric", month: "short", day: "numeric" },
       docId: null,
-      loading: null,
-      billerStreetAddress: null,
-      billerCity: null,
-      billerZipCode: null,
-      billerCountry: null,
-      clientName: null,
-      clientEmail: null,
-      clientStreetAddress: null,
-      clientCity: null,
-      clientZipCode: null,
-      clientCountry: null,
-      invoiceDateUnix: null,
-      invoiceDate: null,
-      paymentTerms: null,
-      paymentDueDateUnix: null,
-      paymentDueDate: null,
-      productDescription: null,
-      invoicePending: null,
-      invoiceDraft: null,
+      loading: false,
+      billerStreetAddress: "",
+      billerCity: "",
+      billerZipCode: "",
+      billerCountry: "",
+      clientName: "",
+      clientEmail: "",
+      clientStreetAddress: "",
+      clientCity: "",
+      clientZipCode: "",
+      clientCountry: "",
+      invoiceDateUnix: "",
+      invoiceDate: "",
+      paymentTerms: "",
+      paymentDueDateUnix: "",
+      paymentDueDate: "",
+      productDescription: "",
+      invoicePending: false,
+      invoiceDraft: false,
       invoiceItemList: [],
       invoiceTotal: 0,
     }
@@ -212,6 +214,59 @@ export default {
 
     deleteInvoiceItem (id) {
       this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id);
+    },
+
+    callInvoiceTotal () {
+      this.invoiceTotal = 0;
+      this.invoiceItemList.forEach(item => this.invoiceTotal += item.total);
+    },
+
+    publishInvoice () {
+      this.invoicePending = true;
+    },
+
+    saveDraft () {
+      this.invoiceDraft = true;
+    },
+
+    async uploadInvoice () {
+      if (this.invoiceItemList.length <= 0) {
+        alert('Please ensure you filled out work items!');
+        return;
+      }
+
+      this.callInvoiceTotal();
+
+      await addDoc(collection(db, "invoices"), {
+        invoiceId: crypto.randomUUID(6),
+        billerStreetAddress: this.billerStreetAddress,
+        billerCity: this.billerCity,
+        billerZipCode: this.billerZipCode,
+        billerCountry: this.billerCountry,
+        clientName: this.clientName,
+        clientEmail: this.clientEmail,
+        clientStreetAddress: this.clientStreetAddress,
+        clientCity: this.clientCity,
+        clientZipCode: this.clientZipCode,
+        clientCountry: this.clientCountry,
+        invoiceDate: this.invoiceDate,
+        invoiceDateUnix: this.invoiceDateUnix,
+        paymentTerms: this.paymentTerms,
+        paymentDueDate: this.paymentDueDate,
+        paymentDueDateUnix: this.paymentDueDateUnix,
+        productDescription: this.productDescription,
+        invoiceItemList: this.invoiceItemList,
+        invoiceTotal: this.invoiceTotal,
+        invoicePending: this.invoicePending,
+        invoiceDraft: this.invoiceDraft,
+        invoicePaid: null,
+      });
+
+      this.TOGGLE_INVOICE_MODAL();
+    },
+
+    submitForm () {
+      this.uploadInvoice();
     }
   },
 }
