@@ -1,6 +1,7 @@
 <template>
   <div @click="checkClick" ref="invoiceWrap" class="invoice__wrap flex flex-column">
     <form @submit.prevent="submitForm" class="invoice__content">
+      <Loading v-if="isLoading" />
       <h1>New Invoice</h1>
 
       <!-- Bill From -->
@@ -151,14 +152,18 @@ import { mapMutations } from "vuex";
 import { db } from "../firebase/firebase";
 import { collection, addDoc } from 'firebase/firestore';
 
+import Loading from "../components/Loading";
+
 export default {
   name: "InvoiceModal",
+
+  components: { Loading },
 
   data () {
     return {
       dateOptions: { year: "numeric", month: "short", day: "numeric" },
       docId: null,
-      loading: false,
+      isLoading: false,
       billerStreetAddress: "",
       billerCity: "",
       billerZipCode: "",
@@ -235,6 +240,8 @@ export default {
         return;
       }
 
+      this.isLoading = true;
+
       this.callInvoiceTotal();
 
       await addDoc(collection(db, "invoices"), {
@@ -261,6 +268,8 @@ export default {
         invoiceDraft: this.invoiceDraft,
         invoicePaid: null,
       });
+
+      this.isLoading = false;
 
       this.TOGGLE_INVOICE_MODAL();
     },
