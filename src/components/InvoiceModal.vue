@@ -1,5 +1,5 @@
 <template>
-  <div @click="checkClick" ref="invoiceWrap" class="invoice__wrap flex flex-column">
+  <div @click.self="checkOutsideClick" ref="invoiceWrap" class="invoice__wrap flex flex-column">
     <form @submit.prevent="submitForm" class="invoice__content">
       <Loading v-if="isLoading" />
       <h1>New Invoice</h1>
@@ -129,15 +129,15 @@
         <!-- Save/Exit  -->
         <div class="save flex">
           <div class="save__left">
-            <button @click="closeInvoice" class="red">
+            <button type="button" @click="closeInvoice" class="red">
               Cancel
             </button>
           </div>
           <div class="save__right flex">
-            <button @click="saveDraft" class="dark-purple">
+            <button type="submit" @click="saveDraft" class="dark-purple">
               Save Draft
             </button>
-            <button @click="publishInvoice" class="purple">
+            <button type="submit" @click="publishInvoice" class="purple">
               Create Invoice
             </button>
           </div>
@@ -201,7 +201,11 @@ export default {
   },
 
   methods: {
-    ...mapMutations(['TOGGLE_INVOICE_MODAL']),
+    ...mapMutations(['TOGGLE_INVOICE_MODAL', 'TOGGLE_MODAL']),
+
+    checkOutsideClick () {
+      this.TOGGLE_MODAL();
+    },
 
     closeInvoice () {
       this.TOGGLE_INVOICE_MODAL();
@@ -283,13 +287,14 @@ export default {
 
 <style lang="scss" scoped>
 .invoice__wrap {
-  background: transparent;
+  background: #4f4f509E;
   height: 100vh;
   overflow-y: scroll;
   position: fixed;
   right: 0;
   top: 0;
   width: 100%;
+  z-index: 99;
 
   &::-webkit-scrollbar {
     display: none;
@@ -407,10 +412,6 @@ export default {
           justify-content: center;
           width: 100%;
 
-          &:hover {
-            background: #141625;
-          }
-
           img {
             margin-right: 4px;
           }
@@ -427,12 +428,6 @@ export default {
 
       &__right {
         justify-content: flex-end;
-
-        button {
-          &:hover {
-            background: #141625;
-          }
-        }
       }
     }
   }
