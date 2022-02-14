@@ -3,6 +3,7 @@
     <div v-if="!isMobile" class="app flex flex-column">
       <Navigation />
       <div class="app__content flex flex-column">
+        <Modal v-if="showModal" />
         <transition name="invoice-modal">
           <InvoiceModal v-if="showInvoiceModal" />
         </transition>
@@ -21,13 +22,15 @@
 import { mapState } from "vuex";
 import Navigation from "./components/Navigation";
 import InvoiceModal from "./components/InvoiceModal";
+import Modal from "./components/Modal";
 
 export default {
   name: "App",
 
   components: {
     Navigation,
-    InvoiceModal
+    InvoiceModal,
+    Modal
   },
 
   data () {
@@ -37,7 +40,7 @@ export default {
   },
 
   computed: {
-    ...mapState(['showInvoiceModal'])
+    ...mapState(['showInvoiceModal', 'showModal'])
   },
 
   created () {
@@ -64,6 +67,7 @@ export default {
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
 
 $dark-blue: #141625;
+$light-blue: #1E2139;
 $dark-purple: #252945;
 $red: #EC5757;
 $purple: #7C5DFA;
@@ -138,6 +142,11 @@ button,
   font-size: 12px;
   margin-right: 8px;
   color: #fff;
+}
+
+button:hover,
+.button:hover {
+  transform: scale(1.1);
 }
 
 .dark-purple {
