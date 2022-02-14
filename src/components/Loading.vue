@@ -19,7 +19,7 @@ export default {
   height: 100%;
   justify-content: center;
   left: 0;
-  position: absolute;
+  position: fixed;
   top: 0;
   width: 100%;
   z-index: 101;

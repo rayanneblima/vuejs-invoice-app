@@ -1,8 +1,9 @@
 <template>
-  <div @click.self="checkOutsideClick" ref="invoiceWrap" class="invoice__wrap flex flex-column">
+  <div @click.self="checkOutsideClick" :style="{ backgroundColor }" class="invoice__wrap flex flex-column">
     <form @submit.prevent="submitForm" class="invoice__content">
       <Loading v-if="isLoading" />
-      <h1>New Invoice</h1>
+      <h1 v-if="!showEditInvoiceModal">New Invoice</h1>
+      <h1 v-else>Edit Invoice</h1>
 
       <!-- Bill From -->
       <div class="bill__from flex flex-column">
@@ -134,11 +135,14 @@
             </button>
           </div>
           <div class="save__right flex">
-            <button type="submit" @click="saveDraft" class="dark-purple">
+            <button v-if="!showEditInvoiceModal" type="submit" @click="saveDraft" class="dark-purple">
               Save Draft
             </button>
-            <button type="submit" @click="publishInvoice" class="purple">
+            <button v-if="!showEditInvoiceModal" type="submit" @click="publishInvoice" class="purple">
               Create Invoice
+            </button>
+            <button v-if="showEditInvoiceModal" type="submit" class="purple">
+              Update Invoice
             </button>
           </div>
         </div>
@@ -148,9 +152,9 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapActions, mapMutations, mapState } from "vuex";
 import { db } from "../firebase/firebase";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc } from 'firebase/firestore';
 
 import Loading from "../components/Loading";
 
@@ -184,7 +188,12 @@ export default {
       invoiceDraft: false,
       invoiceItemList: [],
       invoiceTotal: 0,
+      backgroundColor: 'transparent'
     }
+  },
+
+  computed: {
+    ...mapState(["showInvoiceModal", "showModal", "showEditInvoiceModal", "currentInvoiceArray"])
   },
 
   watch: {
@@ -192,16 +201,69 @@ export default {
       const futureDate = new Date();
       this.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.paymentTerms));
       this.paymentDueDate = new Date(this.paymentDueDateUnix).toLocaleString('en-us', this.dateOptions);
+    },
+
+    showModal () {
+      if (!this.showModal && !this.showInvoiceModal) {
+        this.backgroundColor = 'transparent';
+        document.querySelector('.invoice__wrap').style.backgroundColor = this.backgroundColor;
+      }
+    },
+
+    showInvoiceModal () {
+      if (!this.showModal && !this.showInvoiceModal) {
+        this.backgroundColor = 'transparent';
+        document.querySelector('.invoice__wrap').style.backgroundColor = this.backgroundColor;
+      }
     }
   },
 
   created () {
+    this.changeBackgroundColor();
+
+    if (this.showEditInvoiceModal) {
+      const currentInvoice = this.currentInvoiceArray[0];
+
+      this.docId = currentInvoice.docId;
+      this.billerStreetAddress = currentInvoice.billerStreetAddress;
+      this.billerCity = currentInvoice.billerCity;
+      this.billerZipCode = currentInvoice.billerZipCode;
+      this.billerCountry = currentInvoice.billerCountry;
+      this.clientName = currentInvoice.clientName;
+      this.clientEmail = currentInvoice.clientEmail;
+      this.clientStreetAddress = currentInvoice.clientStreetAddress;
+      this.clientCity = currentInvoice.clientCity;
+      this.clientZipCode = currentInvoice.clientZipCode;
+      this.clientCountry = currentInvoice.clientCountry;
+      this.invoiceDateUnix = currentInvoice.invoiceDateUnix;
+      this.invoiceDate = currentInvoice.invoiceDate;
+      this.paymentTerms = currentInvoice.paymentTerms;
+      this.paymentDueDateUnix = currentInvoice.paymentDueDateUnix;
+      this.paymentDueDate = currentInvoice.paymentDueDate;
+      this.productDescription = currentInvoice.productDescription;
+      this.invoicePending = currentInvoice.invoicePending;
+      this.invoiceDraft = currentInvoice.invoiceDraft;
+      this.invoiceItemList = currentInvoice.invoiceItemList;
+      this.invoiceTotal = currentInvoice.invoiceTotal;
+
+      return;
+    }
+
     this.invoiceDateUnix = Date.now();
     this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString('en-us', this.dateOptions);
   },
 
   methods: {
-    ...mapMutations(['TOGGLE_INVOICE_MODAL', 'TOGGLE_MODAL']),
+    ...mapMutations(["TOGGLE_INVOICE_MODAL", "TOGGLE_MODAL", "TOGGLE_EDIT_INVOICE_MODAL"]),
+    ...mapActions(["UPDATE_INVOICE"]),
+
+    changeBackgroundColor () {
+      if (this.showInvoiceModal) {
+        return setTimeout(() => this.backgroundColor = '#030303b8', 650);
+      }
+
+      this.backgroundColor = 'transparent';
+    },
 
     checkOutsideClick () {
       this.TOGGLE_MODAL();
@@ -209,6 +271,10 @@ export default {
 
     closeInvoice () {
       this.TOGGLE_INVOICE_MODAL();
+
+      if (this.showEditInvoiceModal) {
+        this.TOGGLE_EDIT_INVOICE_MODAL();
+      }
     },
 
     addNewInvoiceItem () {
@@ -238,7 +304,7 @@ export default {
       this.invoiceDraft = true;
     },
 
-    async uploadInvoice () {
+    async sendInvoice () {
       if (this.invoiceItemList.length <= 0) {
         alert('Please ensure you filled out work items!');
         return;
@@ -278,8 +344,49 @@ export default {
       this.TOGGLE_INVOICE_MODAL();
     },
 
+    async updateInvoice () {
+      if (this.invoiceItemList.length <= 0) {
+        alert('Please ensure you filled out work items!');
+        return;
+      }
+
+      this.isLoading = true;
+
+      this.callInvoiceTotal();
+
+      await updateDoc(doc(db, "invoices", this.docId), {
+        billerStreetAddress: this.billerStreetAddress,
+        billerCity: this.billerCity,
+        billerZipCode: this.billerZipCode,
+        billerCountry: this.billerCountry,
+        clientName: this.clientName,
+        clientEmail: this.clientEmail,
+        clientStreetAddress: this.clientStreetAddress,
+        clientCity: this.clientCity,
+        clientZipCode: this.clientZipCode,
+        clientCountry: this.clientCountry,
+        invoiceDate: this.invoiceDate,
+        invoiceDateUnix: this.invoiceDateUnix,
+        paymentTerms: this.paymentTerms,
+        paymentDueDate: this.paymentDueDate,
+        paymentDueDateUnix: this.paymentDueDateUnix,
+        productDescription: this.productDescription,
+        invoiceItemList: this.invoiceItemList,
+        invoiceTotal: this.invoiceTotal
+      });
+
+      this.isLoading = false;
+
+      const data = {
+        docId: this.docId,
+        routeId: this.$route.params.id
+      };
+
+      this.UPDATE_INVOICE(data);
+    },
+
     submitForm () {
-      this.uploadInvoice();
+      this.showEditInvoiceModal ? this.updateInvoice() : this.sendInvoice();
     }
   },
 }
@@ -287,7 +394,6 @@ export default {
 
 <style lang="scss" scoped>
 .invoice__wrap {
-  background: #4f4f509E;
   height: 100vh;
   overflow-y: scroll;
   position: fixed;

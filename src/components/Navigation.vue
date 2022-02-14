@@ -1,14 +1,22 @@
 <template>
   <header class="header flex">
-    <div class="header__branding flex">
-      <img src="@/assets/file-invoice-dollar-solid.png" alt="Logomarca" />
-    </div>
+    <router-link :to="{ name: (!showInvoiceModal || !showEditInvoiceModal ? 'Home': '') }">
+      <div class="header__branding flex">
+        <img src="@/assets/file-invoice-dollar-solid.png" alt="Logomarca" />
+      </div>
+    </router-link>
   </header>
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
-  name: "Navigation"
+  name: "Navigation",
+
+  computed: {
+    ...mapState(["showInvoiceModal", "showEditInvoiceModal"])
+  },
 }
 </script>
 

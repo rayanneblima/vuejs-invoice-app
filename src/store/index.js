@@ -7,16 +7,22 @@ export default createStore({
     invoiceData: [],
     showInvoiceModal: false,
     showModal: false,
-    invoicesLoaded: false
+    invoicesLoaded: false,
+    currentInvoiceArray: [],
+    showEditInvoiceModal: false
   },
 
   mutations: {
+    TOGGLE_MODAL (state) {
+      state.showModal =  !state.showModal;
+    },
+
     TOGGLE_INVOICE_MODAL (state) {
       state.showInvoiceModal =  !state.showInvoiceModal;
     },
 
-    TOGGLE_MODAL (state) {
-      state.showModal =  !state.showModal;
+    TOGGLE_EDIT_INVOICE_MODAL (state) {
+      state.showEditInvoiceModal =  !state.showEditInvoiceModal;
     },
 
     SET_INVOICE_DATA (state, payload) {
@@ -25,6 +31,14 @@ export default createStore({
 
     SET_INVOICES_LOADED (state) {
       state.invoicesLoaded = true;
+    },
+
+    SET_CURRENT_INVOICE (state, payload) {
+      state.currentInvoiceArray = state.invoiceData.filter(invoice => invoice.invoiceId === payload);
+    },
+
+    DELETE_INVOICE (state, payload) {
+      state.invoiceData = state.invoiceData.filter(invoice => invoice.docId !== payload);
     }
   },
 
@@ -64,6 +78,14 @@ export default createStore({
         }
       });
       commit('SET_INVOICES_LOADED');
+    },
+
+    async UPDATE_INVOICE ({ commit, dispatch }, { docId, routeId }) {
+      commit("DELETE_INVOICE", docId);
+      await dispatch("GET_INVOICES");
+      commit("TOGGLE_INVOICE_MODAL");
+      commit("TOGGLE_EDIT_INVOICE_MODAL");
+      commit("SET_CURRENT_INVOICE", routeId);
     }
   },
 
