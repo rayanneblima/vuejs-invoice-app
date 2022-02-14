@@ -8,13 +8,13 @@
       </div>
       <div class="header__right flex">
         <div @click="toggleFilterMenu" class="header__filter filter flex">
-          <span>Filter by status</span>
+          <span>Filter by status <span v-if="filteredInvoice">:{{ filteredInvoice }}</span></span>
           <img src="@/assets/icon-arrow-down.svg" alt="" />
           <ul v-show="showFilterMenu" class="filter__menu">
-            <li>Draft</li>
-            <li>Pending</li>
-            <li>Paid</li>
-            <li>Clear Filter</li>
+            <li @click="filterInvoices">Draft</li>
+            <li @click="filterInvoices">Pending</li>
+            <li @click="filterInvoices">Paid</li>
+            <li @click="filterInvoices">Clear Filter</li>
           </ul>
         </div>
         <div @click="newInvoice" class="button flex">
@@ -28,7 +28,7 @@
     <!-- Invoices -->
     <div v-if="invoiceData.length">
       <Invoice 
-        v-for="(invoice, index) in invoiceData" :key="index"
+        v-for="(invoice, index) in filteredData" :key="index"
         :invoice="invoice"
       />
     </div>
@@ -54,12 +54,31 @@ export default {
 
   data () {
     return {
-      showFilterMenu: false
+      showFilterMenu: false,
+      filteredInvoice: null
     }
   },
 
   computed: {
-    ...mapState(['invoiceData'])
+    ...mapState(['invoiceData']),
+
+    filteredData () {
+      return this.invoiceData.filter(invoice => {
+        if (this.filteredInvoice === "Draft") {
+          return invoice.invoiceDraft === true;
+        }
+
+        if (this.filteredInvoice === "Paid") {
+          return invoice.invoicePaid === true;
+        }
+        
+        if (this.filteredInvoice === "Pending") {
+          return invoice.invoicePending === true;
+        }
+
+        return invoice;
+      });
+    }
   },
 
   methods: {
@@ -71,6 +90,15 @@ export default {
 
     toggleFilterMenu () {
       this.showFilterMenu = !this.showFilterMenu;
+    },
+
+    filterInvoices (e) {
+      if (e.target.innerText === "Clear Filter") {
+        this.filteredInvoice = null;
+        return;
+      }
+
+      this.filteredInvoice = e.target.innerText;
     }
   }
 };
@@ -120,6 +148,7 @@ export default {
           position: absolute;
           top: 25px;
           width: 120px;
+          z-index: 99;
 
           li {
             cursor: pointer;
