@@ -213,7 +213,7 @@ export default {
 
     addNewInvoiceItem () {
       this.invoiceItemList.push({
-        id: crypto.randomUUID(),
+        id: crypto.randomUUID().slice(0, 6),
         itemName: "",
         qty: "",
         price: 0,
@@ -249,7 +249,7 @@ export default {
       this.callInvoiceTotal();
 
       await addDoc(collection(db, "invoices"), {
-        invoiceId: crypto.randomUUID(6),
+        invoiceId: crypto.randomUUID().slice(0, 6),
         billerStreetAddress: this.billerStreetAddress,
         billerCity: this.billerCity,
         billerZipCode: this.billerZipCode,
