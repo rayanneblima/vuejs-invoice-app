@@ -255,7 +255,7 @@ export default {
 
   methods: {
     ...mapMutations(["TOGGLE_INVOICE_MODAL", "TOGGLE_MODAL", "TOGGLE_EDIT_INVOICE_MODAL"]),
-    ...mapActions(["UPDATE_INVOICE"]),
+    ...mapActions(["UPDATE_INVOICE", "GET_INVOICES"]),
 
     changeBackgroundColor () {
       if (this.showInvoiceModal) {
@@ -342,6 +342,7 @@ export default {
       this.isLoading = false;
 
       this.TOGGLE_INVOICE_MODAL();
+      this.GET_INVOICES();
     },
 
     async updateInvoice () {
