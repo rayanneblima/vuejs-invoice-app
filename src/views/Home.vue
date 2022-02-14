@@ -4,7 +4,7 @@
     <div class="home__header header flex">
       <div class="header__left flex flex-column">
         <h1>Invoices</h1>
-        <span>There are 4 total invoices</span>
+        <span v-if="invoiceData.length">There are <b>{{ invoiceData.length }}</b> total invoices</span>
       </div>
       <div class="header__right flex">
         <div @click="toggleFilterMenu" class="header__filter filter flex">
@@ -26,11 +26,17 @@
       </div>
     </div>
     <!-- Invoices -->
-    <div>
+    <div v-if="invoiceData.length">
       <Invoice 
         v-for="(invoice, index) in invoiceData" :key="index"
         :invoice="invoice"
       />
+    </div>
+
+    <div class="empty flex flex-column" v-else>
+       <img src="@/assets/illustration-empty.svg" alt="" />
+       <h3>There is nothing here</h3>
+       <p>Create a new invoice by clicking the <b>New Invoice</b> button and get started.</p>
     </div>
   </div>
 </template>
@@ -147,6 +153,29 @@ export default {
           }
         }
       }
+    }
+  }
+
+  .empty {
+    align-items: center;
+    margin-top: 60px;
+
+    img {
+      height: 200px;
+      width: 214px;
+    }
+
+    h3 {
+      font-size: 20px;
+      margin-top: 40px;
+    }
+
+    p {
+      font-size: 12px;
+      font-weight: 300;
+      margin-top: 16px;
+      max-width: 224px;
+      text-align: center;
     }
   }
 }
